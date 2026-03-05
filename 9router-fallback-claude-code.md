@@ -102,22 +102,34 @@ Crea `C:\Users\TU_USUARIO\claude-modo-normal.bat`:
 ```batch
 @echo off
 echo Modo: CLAUDE REAL (Anthropic directo)
-setx ANTHROPIC_BASE_URL ""
-setx ANTHROPIC_API_KEY ""
-echo Variables limpiadas. Reinicia la terminal y usa: claude
+powershell -Command "[System.Environment]::SetEnvironmentVariable('ANTHROPIC_BASE_URL', $null, 'User')"
+powershell -Command "[System.Environment]::SetEnvironmentVariable('ANTHROPIC_API_KEY', $null, 'User')"
+echo Variables eliminadas. Cierra TODAS las terminales y abre una nueva.
+echo Luego usa: claude
+pause
 ```
+
+**CRITICO: NO usar `setx VARIABLE ""` para limpiar variables.** Eso las deja como cadena vacia y Claude Code las detecta, causando el error "Auth conflict". Siempre usar PowerShell con `$null` para eliminarlas del registro de Windows.
 
 ### Script para cambiar a Codex via 9router:
 Crea `C:\Users\TU_USUARIO\claude-modo-codex.bat`:
 
 ```batch
 @echo off
-echo Modo: CODEX via 9router (fallback)
+echo === Modo: CODEX via 9router (fallback) ===
+echo.
 echo IMPORTANTE: 9router debe estar corriendo en otra terminal
-setx ANTHROPIC_BASE_URL "http://localhost:20128"
-setx ANTHROPIC_API_KEY "cualquier-valor-dummy"
-echo Listo. Reinicia la terminal y usa: claude
-echo Dashboard disponible en: http://localhost:20128/dashboard
+echo.
+powershell -Command "[System.Environment]::SetEnvironmentVariable('ANTHROPIC_BASE_URL', 'http://localhost:20128', 'User')"
+powershell -Command "[System.Environment]::SetEnvironmentVariable('ANTHROPIC_API_KEY', 'router-dummy-key', 'User')"
+echo Variables configuradas:
+echo   ANTHROPIC_BASE_URL = http://localhost:20128
+echo   ANTHROPIC_API_KEY  = router-dummy-key
+echo.
+echo Cierra TODAS las terminales y abre una nueva.
+echo Luego: claude /logout (di SI a API key) y despues /model cx/gpt-5.3-codex
+echo Dashboard: http://localhost:20128/dashboard
+pause
 ```
 
 ### Script para ver en que modo estas:
@@ -276,7 +288,7 @@ Para cambiar modelo dentro de Claude Code:
 
 - **NO** configures 9router como servicio de Windows — solo inicialo manualmente cuando lo necesites
 - **NO** modifiques nada en `~/.claude/` manualmente
-- **Siempre reinicia la terminal** despues de ejecutar los scripts de cambio de modo (los `setx` solo aplican a terminales nuevas)
+- **Siempre cierra TODA la ventana de la terminal** despues de ejecutar los scripts de cambio de modo (las variables de entorno solo aplican a terminales nuevas). Dar `/exit` dentro de Claude Code NO es suficiente — debes cerrar la ventana completa
 - La primera vez que conectes Codex en el dashboard, necesitas hacer OAuth login. Las siguientes veces ya recuerda la sesion.
 - Si el dashboard no carga (`ERR_CONNECTION_REFUSED`), verifica que la terminal de 9router siga abierta y muestre el menu o el log del servidor
 
